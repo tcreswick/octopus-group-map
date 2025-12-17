@@ -53,7 +53,7 @@ L.TileLayer.DeepZoom = L.TileLayer.extend({
         this._imageSize = [imageSize];
         this._gridSize = [this._getGridSize(imageSize)];
 
-        var maxZoomCustom = 15;
+        var maxZoomCustom = 16;
         while ((imageSize.x > 0 || imageSize.y > 0) && maxZoomCustom > 0) {
             maxZoomCustom--;
             imageSize = imageSize.divideBy(2).floor();
@@ -135,9 +135,9 @@ L.tileLayer.deepzoom = function (url, options) {
 
             var map = L.map('image2d').setView(new L.LatLng(0,0), 0);
 
-            var dzLayer = L.tileLayer.deepzoom('Full Octopus Group_files/', { 
-                width: 27033, 
-                height: 26742, 
+            var dzLayer = L.tileLayer.deepzoom('octopus_group_map_files/', { 
+                width: 40000, 
+                height: 45783, 
                 minZoom: 6            }).addTo(map);
 	       map.fitBounds(dzLayer.options.bounds);
 
