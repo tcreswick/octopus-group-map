@@ -1,149 +1,363 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <link rel="shortcut icon" href="https://www.maltego.com/favicon.ico" />
-        <title>Octopus Companies Group Map</title>
-        <link rel='stylesheet' href='https://unpkg.com/leaflet@1.4.0/dist/leaflet.css' />
-        <style type='text/css'>
-            html, body, #image2d {
-                width: 100%;
-                height: 100%;
-                padding: 0;
-                margin: 0;
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="https://www.maltego.com/favicon.ico" />
+    <title>Octopus Companies Group Map</title>
+    <link rel='stylesheet' href='https://unpkg.com/leaflet@1.4.0/dist/leaflet.css' />
+    <style type='text/css'>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+        html,
+        body,
+        #image2d {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Modal Overlay */
+        #disclaimer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        #disclaimer-overlay.hidden {
+            display: none;
+        }
+
+        /* Modal Box */
+        #disclaimer-modal {
+            background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 40px 48px;
+            max-width: 560px;
+            width: 90%;
+            box-shadow:
+                0 25px 80px rgba(0, 0, 0, 0.5),
+                0 0 1px rgba(255, 255, 255, 0.1) inset;
+            color: #e6edf3;
+            animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.96);
             }
-        </style>
-    </head>
 
-    <body>
-<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4b3e02157f494210a47b38b370e61a01"}'></script><!-- End Cloudflare Web Analytics -->
-        <div id='image2d'>
-        <center><img src='https://www.maltego.com/favicon.ico' alt=' Maltego Tiled Browser Image uses JavaScript files from the internet. An active internet connection is required.'></center>
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #disclaimer-modal h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        #disclaimer-modal .subtitle {
+            font-size: 14px;
+            color: #7d8590;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        #disclaimer-modal .content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+        }
+
+        #disclaimer-modal p {
+            margin: 0 0 16px 0;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #b1bac4;
+        }
+
+        #disclaimer-modal p:last-child {
+            margin-bottom: 0;
+        }
+
+        #disclaimer-modal .warning {
+            color: #f0883e;
+            font-weight: 600;
+        }
+
+        #understand-btn {
+            display: block;
+            width: 100%;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            color: #ffffff;
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(35, 134, 54, 0.4);
+        }
+
+        #understand-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(35, 134, 54, 0.5);
+            background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%);
+        }
+
+        #understand-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Disable interactions when modal is open */
+        body.modal-open #image2d {
+            pointer-events: none;
+            filter: blur(2px);
+        }
+
+        /* Responsive styles for small screens */
+        @media screen and (max-width: 600px) {
+            #disclaimer-overlay {
+                padding: 16px;
+                align-items: flex-start;
+                overflow-y: auto;
+            }
+
+            #disclaimer-modal {
+                padding: 24px 20px;
+                border-radius: 12px;
+                max-height: calc(100vh - 32px);
+                overflow-y: auto;
+                margin: auto 0;
+            }
+
+            #disclaimer-modal h1 {
+                font-size: 22px;
+            }
+
+            #disclaimer-modal .subtitle {
+                font-size: 12px;
+                margin-bottom: 16px;
+                letter-spacing: 1px;
+            }
+
+            #disclaimer-modal .content {
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+
+            #disclaimer-modal p {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+
+            #understand-btn {
+                padding: 14px 24px;
+                font-size: 15px;
+            }
+        }
+
+        @media screen and (max-height: 600px) {
+            #disclaimer-overlay {
+                align-items: flex-start;
+                padding: 12px;
+                overflow-y: auto;
+            }
+
+            #disclaimer-modal {
+                max-height: calc(100vh - 24px);
+                overflow-y: auto;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body class="modal-open">
+    <!-- Cloudflare Web Analytics -->
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+        data-cf-beacon='{"token": "4b3e02157f494210a47b38b370e61a01"}'></script><!-- End Cloudflare Web Analytics -->
+
+    <!-- Disclaimer Modal -->
+    <div id="disclaimer-overlay">
+        <div id="disclaimer-modal">
+            <div class="subtitle">Important Notice</div>
+            <div class="content">
+                <p>This interactive map visualizes the corporate structure and relationships within the Octopus Group of companies.</p>
+                <p class="warning">Disclaimer:</p>
+                <p>The information presented in this map has been sourced exclusively from publicly available information from Companies House. The map does not update in real time, and is based on a Companies House snapshot from 01/12/2025.</p>
+                <p>Some entities will almost certainly be missing, due to the way in which Companies House records PSC data and/or due to errors introduced in the data entry by the companies themselves, since simple typos are relatively commonplace in the dataset. As such, the map should not be used to draw any conclusions about the corporate structure of the Octopus Group of companies.</p>
+                <p>The map is not an official document of the Octopus Group of companies, and is not endorsed by or affiliated with the Octopus Group in any way.</p>
+                <p>This is not financial or investment advice. It is provided for informational and research purposes only, and should not be relied upon for legal, financial, or investment decisions.</p>
+                <p>By continuing, you acknowledge that you understand these limitations. You should always independently verify the information presented in this map with the official data sources.</p>
+            </div>
+            <button id="understand-btn">I Understand</button>
         </div>
-        <script type='text/javascript' src='https://unpkg.com/leaflet@1.4.0/dist/leaflet.js'></script>
-        <script type='text/javascript'>
-            /*
- * Leaflet-DeepZoom 2.0.0
- * Displaying DeepZoom tiles with Leaflet 1.x
- * by Al Farisi, Indokreatif Teknologi
- * License: ISC ( https://en.wikipedia.org/wiki/ISC_license )
- * https://github.com/alfarisi/leaflet-deepzoom
- */
+    </div>
 
-L.TileLayer.DeepZoom = L.TileLayer.extend({
-    options: {
-        width: -1,
-        height: -1,
-        imageFormat: 'jpg',
-        tileSize: 256,
-        maxZoom: undefined
-    },
+    <div id='image2d'>
+        <center><img src='https://www.maltego.com/favicon.ico'
+                alt=' Maltego Tiled Browser Image uses JavaScript files from the internet. An active internet connection is required.'>
+        </center>
+    </div>
+    <script type='text/javascript' src='https://unpkg.com/leaflet@1.4.0/dist/leaflet.js'></script>
+    <script type='text/javascript'>
+        /*
+* Leaflet-DeepZoom 2.0.0
+* Displaying DeepZoom tiles with Leaflet 1.x
+* by Al Farisi, Indokreatif Teknologi
+* License: ISC ( https://en.wikipedia.org/wiki/ISC_license )
+* https://github.com/alfarisi/leaflet-deepzoom
+*/
 
-    initialize: function (url, options) {
-        var options = L.setOptions(this, options);
-        this._url = url;
+        L.TileLayer.DeepZoom = L.TileLayer.extend({
+            options: {
+                width: -1,
+                height: -1,
+                imageFormat: 'jpg',
+                tileSize: 256,
+                maxZoom: undefined
+            },
 
-        if (options.width < 0 || options.height < 0) {
-            throw new Error('The user must set the Width and Height of the image');
-        }
+            initialize: function (url, options) {
+                var options = L.setOptions(this, options);
+                this._url = url;
 
-        var imageSize = L.point(options.width, options.height),
-                tileSize = options.tileSize;
+                if (options.width < 0 || options.height < 0) {
+                    throw new Error('The user must set the Width and Height of the image');
+                }
 
-        this._imageSize = [imageSize];
-        this._gridSize = [this._getGridSize(imageSize)];
+                var imageSize = L.point(options.width, options.height),
+                    tileSize = options.tileSize;
 
-        var maxZoomCustom = 16;
-        while ((imageSize.x > 0 || imageSize.y > 0) && maxZoomCustom > 0) {
-            maxZoomCustom--;
-            imageSize = imageSize.divideBy(2).floor();
-            this._imageSize.push(imageSize);
-            this._gridSize.push(this._getGridSize(imageSize));
-        }
+                this._imageSize = [imageSize];
+                this._gridSize = [this._getGridSize(imageSize)];
 
-        this._imageSize.reverse();
-        this._gridSize.reverse();
+                var maxZoomCustom = 16;
+                while ((imageSize.x > 0 || imageSize.y > 0) && maxZoomCustom > 0) {
+                    maxZoomCustom--;
+                    imageSize = imageSize.divideBy(2).floor();
+                    this._imageSize.push(imageSize);
+                    this._gridSize.push(this._getGridSize(imageSize));
+                }
 
-        options.maxNativeZoom = this._gridSize.length - 1;
+                this._imageSize.reverse();
+                this._gridSize.reverse();
 
-        if (typeof options.maxZoom == 'undefined') {
-            options.maxZoom = options.maxNativeZoom;
-        }
+                options.maxNativeZoom = this._gridSize.length - 1;
 
-        var maxZoomGrid = this._gridSize[options.maxNativeZoom];
-        var southWest = map.unproject([0, options.height], options.maxNativeZoom);
-        var northEast = map.unproject([options.width, 0], options.maxNativeZoom);
-        options.bounds = new L.LatLngBounds(southWest, northEast);
-    },
+                if (typeof options.maxZoom == 'undefined') {
+                    options.maxZoom = options.maxNativeZoom;
+                }
 
-    _getGridSize: function (imageSize) {
-        var tileSize = this.options.tileSize;
-        return L.point(Math.ceil(imageSize.x / tileSize), Math.ceil(imageSize.y / tileSize));
-    },
+                var maxZoomGrid = this._gridSize[options.maxNativeZoom];
+                var southWest = map.unproject([0, options.height], options.maxNativeZoom);
+                var northEast = map.unproject([options.width, 0], options.maxNativeZoom);
+                options.bounds = new L.LatLngBounds(southWest, northEast);
+            },
 
-    _addTile: function (coords, container) {
-        var tilePos = this._getTilePos(coords),
-                key = this._tileCoordsToKey(coords);
+            _getGridSize: function (imageSize) {
+                var tileSize = this.options.tileSize;
+                return L.point(Math.ceil(imageSize.x / tileSize), Math.ceil(imageSize.y / tileSize));
+            },
 
-        var tile = this.createTile(this._wrapCoords(coords), L.bind(this._tileReady, this, coords));
+            _addTile: function (coords, container) {
+                var tilePos = this._getTilePos(coords),
+                    key = this._tileCoordsToKey(coords);
 
-        this._initTile(tile);
+                var tile = this.createTile(this._wrapCoords(coords), L.bind(this._tileReady, this, coords));
 
-        var imageSize = this._imageSize[this._getZoomForUrl()],
-                gridSize = this._gridSize[this._getZoomForUrl()],
-                tileSize = this.options.tileSize;
+                this._initTile(tile);
 
-        if (coords.x === gridSize.x - 1) {
-            tile.style.width = imageSize.x - (tileSize * (gridSize.x - 1)) + 'px';
-        }
+                var imageSize = this._imageSize[this._getZoomForUrl()],
+                    gridSize = this._gridSize[this._getZoomForUrl()],
+                    tileSize = this.options.tileSize;
 
-        if (coords.y === gridSize.y - 1) {
-            tile.style.height = imageSize.y - (tileSize * (gridSize.y - 1)) + 'px';
-        }
+                if (coords.x === gridSize.x - 1) {
+                    tile.style.width = imageSize.x - (tileSize * (gridSize.x - 1)) + 'px';
+                }
 
-        if (this.createTile.length < 2) {
-            L.Util.requestAnimFrame(L.bind(this._tileReady, this, coords, null, tile));
-        }
+                if (coords.y === gridSize.y - 1) {
+                    tile.style.height = imageSize.y - (tileSize * (gridSize.y - 1)) + 'px';
+                }
 
-        L.DomUtil.setPosition(tile, tilePos);
+                if (this.createTile.length < 2) {
+                    L.Util.requestAnimFrame(L.bind(this._tileReady, this, coords, null, tile));
+                }
 
-        this._tiles[key] = {
-            el: tile,
-            coords: coords,
-            current: true
-        };
+                L.DomUtil.setPosition(tile, tilePos);
 
-        container.appendChild(tile);
-        this.fire('tileloadstart', {
-            tile: tile,
-            coords: coords
+                this._tiles[key] = {
+                    el: tile,
+                    coords: coords,
+                    current: true
+                };
+
+                container.appendChild(tile);
+                this.fire('tileloadstart', {
+                    tile: tile,
+                    coords: coords
+                });
+            },
+
+            getTileUrl: function (tilePoint) {
+                return this._url + this._getZoomForUrl() + '/' + tilePoint.x + '_' + tilePoint.y + '.' + this.options.imageFormat;
+            }
+
         });
-    },
 
-    getTileUrl: function (tilePoint) {
-        return this._url + this._getZoomForUrl() + '/' + tilePoint.x + '_' + tilePoint.y + '.' + this.options.imageFormat;
-    }
+        L.tileLayer.deepzoom = function (url, options) {
+            return new L.TileLayer.DeepZoom(url, options);
+        };
+    </script>
 
-});
+    <script type='text/javascript'>
 
-L.tileLayer.deepzoom = function (url, options) {
-    return new L.TileLayer.DeepZoom(url, options);
-};
-        </script>  
+        var map = L.map('image2d').setView(new L.LatLng(0, 0), 0);
 
-        <script type='text/javascript'>
+        var dzLayer = L.tileLayer.deepzoom('octopus_group_map_files/', {
+            width: 40000,
+            height: 45783,
+            minZoom: 6
+        }).addTo(map);
+        map.fitBounds(dzLayer.options.bounds);
 
-            var map = L.map('image2d').setView(new L.LatLng(0,0), 0);
-
-            var dzLayer = L.tileLayer.deepzoom('octopus_group_map_files/', { 
-                width: 40000, 
-                height: 45783, 
-                minZoom: 6            }).addTo(map);
-	       map.fitBounds(dzLayer.options.bounds);
-
-        </script>
-        <noscript>
+    </script>
+    <noscript>
         <p>Maltego Tiled Browser Image is not available unless JavaScript is enabled.</p>
-        </noscript>
-    </body>
+    </noscript>
+
+    <script type='text/javascript'>
+        // Disclaimer modal handling
+        document.getElementById('understand-btn').addEventListener('click', function () {
+            document.getElementById('disclaimer-overlay').classList.add('hidden');
+            document.body.classList.remove('modal-open');
+        });
+    </script>
+</body>
+
 </html>
